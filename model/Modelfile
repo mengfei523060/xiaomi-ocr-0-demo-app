@@ -1,0 +1,8 @@
+FROM ./xiaomi-ocr-0-bf16.gguf
+FROM ./xiaomi-ocr-0-bf16-mmproj.gguf
+TEMPLATE {{ .Prompt }}
+PARAMETER seed 0
+PARAMETER temperature 0
+PARAMETER num_ctx 32768
+PARAMETER num_predict 4096
+PARAMETER repeat_penalty 1
