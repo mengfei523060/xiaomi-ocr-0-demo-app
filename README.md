@@ -20,7 +20,6 @@
 ```bash
 # 方式一：一键脚本（首次自动创建 app/.venv 并安装 core/requirements.txt）
 ./app/run.sh                # 默认 http://127.0.0.1:8790 并自动打开浏览器
-PORT=8800 ./app/run.sh      # 指定端口
 
 # 方式二：已有 Python 环境
 pip install -r app/core/requirements.txt
