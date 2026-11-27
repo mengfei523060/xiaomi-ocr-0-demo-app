@@ -8,7 +8,7 @@
 | 项目 | 要求 |
 | --- | --- |
 | Python | ≥ 3.10（启动时只需 Pillow、pypdfium2、numpy 三个包） |
-| 模型运行时 | 二选一：**llama.cpp**（macOS 推荐 `brew install llama.cpp`）或 **Ollama** |
+| 模型运行时 | 二选一：**llama.cpp**（ 推荐 ）或 **Ollama** |
 | 磁盘 | 模型约 1.7GB（已打包在 `app/model/`）；`out/` 作业缓存若干 |
 | 浏览器 | 任意现代浏览器（前端原生 JS + 自带 KaTeX，可离线） |
 
