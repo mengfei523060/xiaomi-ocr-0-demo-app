@@ -1,6 +1,6 @@
 # Xiaomi-OCR-0 App
-
-以 `demo/` 功能为基础重做的**独立 App 界面**：打开即用——内置模型自动接入，什么都不用填。
+官方项目地址：https://github.com/xiaomi-research/Xiaomi-OCR-0
+以官方 `demo/` 功能为基础重做的**独立 App 界面**：打开即用——内置模型自动接入，什么都不用填。
 `app/` 整个文件夹自包含、可整体拷走，不依赖仓库任何其他目录（后处理代码已内联到 `app/core/vendor/`）。
 
 ## 使用要求
