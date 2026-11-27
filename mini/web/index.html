@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#f7f7f5" />
+<title>Xiaomi-OCR-0 · Mini</title>
+<link rel="icon" href="/xiaomi-logo.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/katex/katex.min.css" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><img src="/xiaomi-logo.svg" alt="" /><b>Xiaomi-OCR-0</b><span>Mini · 需自备模型 · 由 Xiaomi-OCR-0 项目 Demo 修改而来</span></div>
+  <div class="top-right">
+    <div class="conn" role="status"><span class="dot off" id="connDot"></span><span id="connText">检测本机模型…</span></div>
+  </div>
+</header>
+
+<main class="shell">
+  <!-- 本机模型状态行；高级设置为其下一行（展开时） -->
+  <section class="modelbar" aria-label="模型与设置">
+    <div class="mb-row">
+      <span class="mb-icon">▣</span>
+      <b class="mb-label">使用本机模型</b>
+      <span class="mb-status" id="modelStatusText">检测中…</span>
+      <span class="mb-note">· 模型调用只发往本机 llama.cpp / Ollama</span>
+      <span class="spacer"></span>
+      <button class="mb-cfg" id="btnCfg" type="button" aria-expanded="false" aria-controls="settingsPanel">高级设置 <i>▾</i></button>
+    </div>
+    <div class="mb-params" id="settingsPanel" hidden>
+      <div class="field"><label>最大输出 Token <small>每页</small></label><input id="cfgMaxTokens" type="number" min="1" max="16384" step="1" value="4096" /></div>
+      <div class="field"><label>Temperature <small>0–2</small></label><input id="cfgTemp" type="number" min="0" max="2" step="0.1" value="0" /></div>
+      <div class="field"><label>并发 <small>PDF 页</small></label><input id="cfgConcurrency" type="number" min="1" max="16" step="1" value="4" /></div>
+      <div class="field"><label>PDF 渲染 DPI <small>36–300</small></label><input id="cfgDpi" type="number" min="36" max="300" step="1" value="150" /></div>
+      <div class="field"><label>PDF 最多页数 <small>留空为全部</small></label><input id="cfgMaxPages" type="number" min="1" max="10000" step="1" placeholder="全部" /></div>
+      <p class="params-tip">参数即时保存；输出被截断时调大 Token。</p>
+    </div>
+  </section>
+
+  <!-- 任务 -->
+  <section class="card" aria-label="解析任务">
+    <div class="card-title">选择任务并上传文件 <small>支持 PNG / JPEG / WEBP / BMP；PDF 请使用「PDF 解析」</small></div>
+    <div class="task-row">
+      <div class="task-tabs" id="taskTabs" role="group" aria-label="选择任务">
+        <button data-task="document" class="active" aria-pressed="true" type="button">文档解析</button>
+        <button data-task="kie" aria-pressed="false" type="button">字段提取</button>
+        <button data-task="vqa" aria-pressed="false" type="button">图像问答</button>
+        <button data-task="pdf" aria-pressed="false" type="button">PDF 解析</button>
+      </div>
+      <div class="run-actions">
+        <button class="ghost" id="btnUpload" type="button">↑ 上传文件</button>
+        <button class="ghost danger" id="btnCancel" type="button" hidden>取消</button>
+        <button class="primary" id="btnRun" type="button">开始解析 ↗</button>
+      </div>
+    </div>
+    <div class="task-inputs">
+      <details class="prompt-details" id="docPromptWrap"><summary>自定义解析提示词 <span>可选</span></summary>
+        <textarea id="docPrompt" rows="3" placeholder="留空使用官方文档解析提示词（Markdown + OTSL 表格 + LaTeX 公式）"></textarea>
+      </details>
+      <label class="task-input" id="kieFieldsWrap" hidden><span>要提取的字段</span>
+        <input id="kieFields" type="text" placeholder="逗号分隔，例如：日期、商户、总额、税额；留空自动提取主要信息" />
+      </label>
+      <label class="task-input" id="vqaQuestionWrap" hidden><span>问题</span>
+        <input id="vqaQuestion" type="text" placeholder="例如：文档中的总金额是多少？" />
+      </label>
+      <p class="task-note" id="pdfNote" hidden style="color:var(--muted)">PDF 的 DPI、页数与并发在上方「高级设置」中调整（已有合理默认值）。</p>
+    </div>
+  </section>
+
+  <!-- 进度 -->
+  <section class="runtime" id="runtimeBar">
+    <div class="runtime-line">
+      <span class="rt-label">状态：</span>
+      <span id="stageText" role="status">空闲</span>
+      <span id="countText"></span>
+      <span class="spacer"></span>
+      <span id="elapsedText"></span>
+    </div>
+    <div class="runtime-track"><progress id="progressBar" value="0" max="1"></progress></div>
+  </section>
+
+  <!-- ③ 输入 / 结果 -->
+  <section class="stage">
+    <div class="pane">
+      <div class="pane-hd"><span class="step">A</span> 原始文件 <span class="badge" id="srcBadge">未选择</span></div>
+      <div class="drop" id="dropZone">
+        <img id="previewImg" alt="预览" hidden />
+        <div class="drop-hint" id="dropHint">点击或拖拽图片到这里<br />也可以点击下方样例快速体验</div>
+      </div>
+      <div class="page-strip" id="pageStrip" hidden></div>
+      <div class="pane-foot"><span class="pill" id="pillLat">耗时 —</span><span class="pill" id="pillTok">Token —</span></div>
+    </div>
+    <div class="pane">
+      <div class="pane-hd"><span class="step">B</span> 识别结果 <span class="badge" id="resBadge">待解析</span>
+        <span class="spacer"></span>
+        <button class="btn-small" id="btnCopy" disabled type="button">复制</button>
+        <button class="btn-small" id="btnDownload" disabled type="button">下载 ↓</button>
+      </div>
+      <div class="view-row">
+        <div class="seg" id="viewSeg" role="group" aria-label="结果视图">
+          <button data-view="pretty" class="active" aria-pressed="true" type="button">预览</button>
+          <button data-view="raw" aria-pressed="false" type="button">原文</button>
+          <button data-view="json" aria-pressed="false" type="button">JSON</button>
+        </div>
+        <span class="format-note">Markdown · LaTeX · 表格</span>
+      </div>
+      <div class="res-body" id="resPane">
+        <div class="res-empty" id="resEmpty"><h2>信息，跃然纸上</h2><p>填好模型 API → 选择文件 → 开始解析<br />结果可预览、复制、下载</p><div class="empty-tags"><span>文字</span><span>表格</span><span>公式</span><span>JSON</span></div></div>
+        <div id="resText" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="samples" aria-label="样例">
+    <div class="card-title">试试这些样例</div>
+    <div class="filmstrip" id="thumbs"></div>
+  </section>
+
+  <footer class="footer">
+    <span class="footer-sign">© 2026 梦飞</span>
+  </footer>
+</main>
+
+<input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp,.pdf,application/pdf" hidden />
+<script src="/katex/katex.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
