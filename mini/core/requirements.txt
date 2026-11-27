@@ -1,4 +1,0 @@
-# app/ 独立运行所需依赖（推理走用户填写的 API，无需 openai SDK）
-Pillow>=9.1
-pypdfium2>=4.0
-numpy
